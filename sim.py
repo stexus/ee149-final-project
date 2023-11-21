@@ -16,6 +16,11 @@ class Leader:
     def goto(self, t):
         self.pos = self.path(t)
         self.vel = (self.path(t + self.dt) - self.pos) / self.dt
+        if (t < self.dt / 2):
+            last_vel = np.array([0.0, 0.0])
+        else:
+            last_vel = (self.pos - self.path(t - self.dt)) / self.dt
+        self.acc = (self.vel - last_vel) / self.dt
         self.t = t
 
     def step(self):
@@ -26,25 +31,37 @@ class Leader:
         n_vel = np.random.normal(scale=noise_v, size=(2,))
         return self.pos + n_pos, self.vel + n_vel
 
+    def sense_raw(self, follower_acc, follower_pos, noise_a, noise_d):
+        true_rel_acc = self.acc - follower_acc
+        true_dist = np.linalg.norm(self.pos - follower_pos)
+        return true_rel_acc + np.random.normal(scale=noise_a, size=(2,)), \
+               true_dist    + np.random.normal(scale=noise_d)
+
 class Follower:
-    def __init__(self, dt):
-        self.pos = np.array([0.0, 0.0])
+    def __init__(self, pos0, dt):
+        self.pos = np.array(pos0)
         self.vel = np.array([0.0, 0.0])
+        self.last_vel = self.vel
         self.dt = dt
         self.speed = 1
 
     def follow(self, leader):
-        leader_pos, leader_vel = leader.sense(0.1, 0.3)
+        acc = (self.vel - self.last_vel) / self.dt
+
+        rel_acc, dist = leader.sense_raw(acc, self.pos, 0.5, 0.3)
+
         self.pos += self.vel*self.dt
-        self.vel = leader_pos - self.pos
-        self.vel /= np.linalg.norm(self.vel)
-        self.vel *= np.linalg.norm(leader_vel)
+        self.last_vel = self.vel
+        self.vel += rel_acc*self.dt
+        # self.vel *= (dist / np.linalg.norm(self.vel))
 
 class Map:
     def __init__(self, dims, x_min, x_max, y_min, y_max):
         self.map = np.zeros(dims)
         self.dims = dims
         self.x_min = x_min
+        self.x_max = x_max
+        self.y_min = y_min
         self.y_max = y_max
         self.x_range = x_max - x_min
         self.y_range = y_max - y_min
@@ -55,6 +72,9 @@ class Map:
     def draw(self, actor, id):
         i = int(((self.y_max - actor.pos[1]) / self.y_range) * self.dims[1])
         j = int(((actor.pos[0] - self.x_min) / self.x_range) * self.dims[0])
+        if not (self.x_min < actor.pos[0] < self.x_max) or not (self.y_min < actor.pos[1] < self.y_max):
+            print("WARNING:", type(actor).__name__, "out of bounds!")
+            return
         self.map[i, j] = id
 
     def fade(self, frac):
@@ -65,12 +85,12 @@ class Map:
 
 
 class Sim:
-    def __init__(self, dt):
+    def __init__(self, follower_start, dt, map_res, map_bound):
         self.t = 0
         self.dt = dt
         self.leader = Leader(self.dt)
-        self.followers = [Follower(self.dt)]
-        self.map = Map((100, 100), -2, 2, -2, 2)
+        self.followers = [Follower(follower_start, self.dt)]
+        self.map = Map((map_res, map_res), -map_bound, map_bound, -map_bound, map_bound)
 
     def set_leader_path(self, path):
         self.leader.set_path(path)
@@ -102,11 +122,13 @@ class Sim:
         plt.show()
 
 if __name__ == "__main__":
-    sim = Sim(0.02)
+    sim = Sim([1.5, -0.3], 0.02, 100, 4)
+
     sim.set_leader_path(
         lambda t: np.array([
             1.5*np.cos(t),
             np.sin(2*t)
         ])
     )
-    sim.run_and_show(np.pi*2, fade=0.05)
+
+    sim.run_and_show(4*np.pi, fade=0.01)
