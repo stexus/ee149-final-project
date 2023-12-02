@@ -19,7 +19,8 @@ Future sendPacket(BTDevicesStruct deviceInfo) async {
         "," +
         event.y.toString() +
         "," +
-        event.z.toString();
+        event.z.toString() +
+        ",";
     sendData(deviceInfo, packet);
   });
 }

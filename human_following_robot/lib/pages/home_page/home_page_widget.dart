@@ -5,6 +5,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/widgets/strength_indicator/strength_indicator_widget.dart';
 import '/custom_code/actions/index.dart' as actions;
+import '/flutter_flow/permissions_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -72,6 +73,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
 
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
+      await requestPermission(bluetoothPermission);
       setState(() {
         _model.isBluetoothEnabled = widget.isBTEnabled;
       });
@@ -90,7 +92,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
         setState(() {
           _model.isFetchingDevices = false;
           _model.foundDevices =
-              _model.devices!.toList().cast<BTDevicesStruct>();
+              _model.foundDevices.toList().cast<BTDevicesStruct>();
         });
       }
     });
