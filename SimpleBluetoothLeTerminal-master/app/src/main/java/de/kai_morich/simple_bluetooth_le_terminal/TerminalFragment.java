@@ -296,6 +296,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         // start
         rssiReader = new PeriodicRssiReader(gatt);
         rssiReader.startReadingRssi();
+        periodicSendData();
         status("connected");
         connected = Connected.True;
     }
@@ -323,7 +324,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         disconnect();
     }
 
-    private void PeriodicSendData() {
+    private void periodicSendData() {
         handler = new Handler(Looper.getMainLooper());
 
         Runnable runnable = new Runnable() {
