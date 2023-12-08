@@ -46,6 +46,7 @@ public class DevicesFragment extends ListFragment {
     private final Runnable leScanStopCallback;
     private final BroadcastReceiver discoveryBroadcastReceiver;
     private final IntentFilter discoveryIntentFilter;
+    private static BluetoothUtil.Device selectedDevice;
 
     private Menu menu;
     private BluetoothAdapter bluetoothAdapter;
@@ -53,7 +54,6 @@ public class DevicesFragment extends ListFragment {
     private ArrayAdapter<BluetoothUtil.Device> listAdapter;
     ActivityResultLauncher<String[]> requestBluetoothPermissionLauncherForStartScan;
     ActivityResultLauncher<String> requestLocationPermissionLauncherForStartScan;
-    private Magnetometer magnetometer;
 
     public DevicesFragment() {
         leScanCallback = (device, rssi, scanRecord) -> {
@@ -122,14 +122,6 @@ public class DevicesFragment extends ListFragment {
                 return view;
             }
         };
-        magnetometer = MainActivity.getMagnetometer();
-        magnetometer.setListener(new Magnetometer.Listener() {
-            //on translation method of accelerometer
-            @Override
-            public void onTranslation(float tx, float ty, float ts) {
-                setEmptyText(tx + " " + ty + " " + ts);
-            }
-        });
     }
 
     @Override
@@ -271,7 +263,7 @@ public class DevicesFragment extends ListFragment {
 
     @SuppressLint("MissingPermission")
     private void stopScan() {
-        //setEmptyText("<no bluetooth devices found>");
+        setEmptyText("<no bluetooth devices found>");
         if(menu != null) {
             menu.findItem(R.id.ble_scan).setVisible(true);
             menu.findItem(R.id.ble_scan_stop).setVisible(false);
@@ -295,10 +287,15 @@ public class DevicesFragment extends ListFragment {
     public void onListItemClick(@NonNull ListView l, @NonNull View v, int position, long id) {
         stopScan();
         BluetoothUtil.Device device = listItems.get(position-1);
+        selectedDevice = device;
         Bundle args = new Bundle();
         args.putString("device", device.getDevice().getAddress());
         Fragment fragment = new TerminalFragment();
         fragment.setArguments(args);
         getFragmentManager().beginTransaction().replace(R.id.fragment, fragment, "terminal").addToBackStack(null).commit();
+    }
+
+    public static BluetoothUtil.Device getSelectedDevice() {
+        return selectedDevice;
     }
 }

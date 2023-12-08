@@ -9,10 +9,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.Editable;
@@ -52,6 +48,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
     private Magnetometer magnetometer;
+    private BluetoothDevice selectedDevice;
+    private String rssi;
+    private String sensorData;
 
     /*
      * Lifecycle
@@ -63,6 +62,16 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         setRetainInstance(true);
         deviceAddress = getArguments().getString("device");
         magnetometer = MainActivity.getMagnetometer();
+        magnetometer.setListener(new Magnetometer.Listener() {
+            @Override
+            public void onTranslation(float tx, float ty, float ts) {
+                if (selectedDevice != null) {
+                    rssi = selectedDevice.EXTRA_RSSI;
+                    sensorData = tx + " " + ty + " " + ts + " " + rssi;
+                }
+            }
+        });
+
     }
 
     @Override
@@ -193,6 +202,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             connected = Connected.Pending;
             SerialSocket socket = new SerialSocket(getActivity().getApplicationContext(), device);
             service.connect(socket);
+            selectedDevice = device;
         } catch (Exception e) {
             onSerialConnectError(e);
         }
@@ -221,6 +231,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 msg = str;
                 data = (str + newline).getBytes();
             }
+            msg = sensorData;
+            data = (sensorData + newline).getBytes();
             SpannableStringBuilder spn = new SpannableStringBuilder(msg + '\n');
             spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             receiveText.append(spn);
