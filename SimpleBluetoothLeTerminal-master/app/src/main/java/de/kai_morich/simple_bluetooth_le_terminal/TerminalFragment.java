@@ -1,18 +1,18 @@
 package de.kai_morich.simple_bluetooth_le_terminal;
 
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -58,6 +58,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private double deviceRssi;
     private String sensorData;
     private SerialSocket curr_socket;
+    private Handler handler;
 
         /*
      * Lifecycle
@@ -73,7 +74,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             @Override
             public void onTranslation(float tx, float ty, float ts) {
                 if (selectedDevice != null) {
-                    deviceRssi = new Intent(getContext(), Intent.class).getDoubleExtra(selectedDevice.EXTRA_RSSI, 100);
+                    // deviceRssi = rssiReader.getRssi();
                     sensorData = STX + Integer.toString(curr_socket.getRssi()) + "," + tx + "," + ty + "," + ts + ETX;
                 } else {
                     sensorData = STX + "100" + "," + tx + "," + ty + "," + ts + ETX;
@@ -320,6 +321,18 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     public void onSerialIoError(Exception e) {
         status("connection lost: " + e.getMessage());
         disconnect();
+    }
+
+    private void PeriodicSendData() {
+        handler = new Handler(Looper.getMainLooper());
+
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                send(sensorData);
+                handler.postDelayed(this, 1000);
+            }
+        };
     }
 
 }
