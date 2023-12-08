@@ -67,7 +67,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             public void onTranslation(float tx, float ty, float ts) {
                 if (selectedDevice != null) {
                     rssi = selectedDevice.EXTRA_RSSI;
-                    sensorData = tx + " " + ty + " " + ts + " " + rssi;
+                    sensorData = "STX" + rssi + "," + tx + "," + ty + "," + ts + "EXT";
+                } else {
+                    sensorData = "STX" + "100" + "," + tx + "," + ty + "," + ts + "EXT";
                 }
             }
         });
