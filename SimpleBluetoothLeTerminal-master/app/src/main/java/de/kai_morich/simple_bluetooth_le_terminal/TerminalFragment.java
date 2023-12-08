@@ -51,6 +51,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private boolean hexEnabled = false;
     private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
+    private Magnetometer magnetometer;
 
     /*
      * Lifecycle
@@ -61,6 +62,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         setHasOptionsMenu(true);
         setRetainInstance(true);
         deviceAddress = getArguments().getString("device");
+        magnetometer = MainActivity.getMagnetometer();
     }
 
     @Override

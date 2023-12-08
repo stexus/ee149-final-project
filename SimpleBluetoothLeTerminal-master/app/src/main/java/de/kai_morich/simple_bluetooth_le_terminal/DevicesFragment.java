@@ -53,7 +53,7 @@ public class DevicesFragment extends ListFragment {
     private ArrayAdapter<BluetoothUtil.Device> listAdapter;
     ActivityResultLauncher<String[]> requestBluetoothPermissionLauncherForStartScan;
     ActivityResultLauncher<String> requestLocationPermissionLauncherForStartScan;
-    private SensorActivity sensorActivity;
+    private Magnetometer magnetometer;
 
     public DevicesFragment() {
         leScanCallback = (device, rssi, scanRecord) -> {
@@ -122,6 +122,14 @@ public class DevicesFragment extends ListFragment {
                 return view;
             }
         };
+        magnetometer = MainActivity.getMagnetometer();
+        magnetometer.setListener(new Magnetometer.Listener() {
+            //on translation method of accelerometer
+            @Override
+            public void onTranslation(float tx, float ty, float ts) {
+                setEmptyText(tx + " " + ty + " " + ts);
+            }
+        });
     }
 
     @Override
@@ -263,14 +271,7 @@ public class DevicesFragment extends ListFragment {
 
     @SuppressLint("MissingPermission")
     private void stopScan() {
-        /*if (sensorActivity != null) {
-            setEmptyText(String.valueOf(sensorActivity));
-        } else {
-            getActivity().startService(new Intent(getActivity(), SensorActivity.class));
-        }
-        if(scanState == ScanState.NONE)
-            return;*/
-        setEmptyText("<no bluetooth devices found>");
+        //setEmptyText("<no bluetooth devices found>");
         if(menu != null) {
             menu.findItem(R.id.ble_scan).setVisible(true);
             menu.findItem(R.id.ble_scan_stop).setVisible(false);
