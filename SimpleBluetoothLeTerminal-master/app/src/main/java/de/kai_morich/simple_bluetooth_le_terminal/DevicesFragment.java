@@ -46,7 +46,6 @@ public class DevicesFragment extends ListFragment {
     private final Runnable leScanStopCallback;
     private final BroadcastReceiver discoveryBroadcastReceiver;
     private final IntentFilter discoveryIntentFilter;
-    private static BluetoothUtil.Device selectedDevice;
 
     private Menu menu;
     private BluetoothAdapter bluetoothAdapter;
@@ -287,15 +286,10 @@ public class DevicesFragment extends ListFragment {
     public void onListItemClick(@NonNull ListView l, @NonNull View v, int position, long id) {
         stopScan();
         BluetoothUtil.Device device = listItems.get(position-1);
-        selectedDevice = device;
         Bundle args = new Bundle();
         args.putString("device", device.getDevice().getAddress());
         Fragment fragment = new TerminalFragment();
         fragment.setArguments(args);
         getFragmentManager().beginTransaction().replace(R.id.fragment, fragment, "terminal").addToBackStack(null).commit();
-    }
-
-    public static BluetoothUtil.Device getSelectedDevice() {
-        return selectedDevice;
     }
 }

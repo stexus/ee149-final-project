@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -33,6 +35,8 @@ import java.util.ArrayDeque;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
 
+    private static final char STX = (char) 2;
+    private static final char ETX = (char) 3;
     private enum Connected { False, Pending, True }
 
     private String deviceAddress;
@@ -49,10 +53,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private String newline = TextUtil.newline_crlf;
     private Magnetometer magnetometer;
     private BluetoothDevice selectedDevice;
-    private String rssi;
+    private double deviceRssi;
     private String sensorData;
 
-    /*
+        /*
      * Lifecycle
      */
     @Override
@@ -66,10 +70,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             @Override
             public void onTranslation(float tx, float ty, float ts) {
                 if (selectedDevice != null) {
-                    rssi = selectedDevice.EXTRA_RSSI;
-                    sensorData = "STX" + rssi + "," + tx + "," + ty + "," + ts + "EXT";
+                    deviceRssi = new Intent(getContext(), Intent.class).getDoubleExtra(selectedDevice.EXTRA_RSSI, 100);
+                    sensorData = STX + deviceRssi + "," + tx + "," + ty + "," + ts + ETX;
                 } else {
-                    sensorData = "STX" + "100" + "," + tx + "," + ty + "," + ts + "EXT";
+                    sensorData = STX + "100" + "," + tx + "," + ty + "," + ts + ETX;
                 }
             }
         });

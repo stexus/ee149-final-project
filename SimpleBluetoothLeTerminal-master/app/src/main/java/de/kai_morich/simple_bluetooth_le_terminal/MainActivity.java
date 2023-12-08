@@ -1,7 +1,5 @@
 package de.kai_morich.simple_bluetooth_le_terminal;
 
-import android.graphics.Color;
-
 import android.os.Bundle;
 import androidx.fragment.app.FragmentManager;
 import androidx.appcompat.app.AppCompatActivity;
