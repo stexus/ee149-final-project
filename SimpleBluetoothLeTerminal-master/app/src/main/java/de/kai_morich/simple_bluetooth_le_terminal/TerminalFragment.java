@@ -41,6 +41,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private String deviceAddress;
     private SerialService service;
+    private BluetoothGatt gatt;
 
     private TextView receiveText;
     private TextView sendText;
@@ -53,8 +54,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private String newline = TextUtil.newline_crlf;
     private Magnetometer magnetometer;
     private BluetoothDevice selectedDevice;
+    private PeriodicRssiReader rssiReader;
     private double deviceRssi;
     private String sensorData;
+    private SerialSocket curr_socket;
 
         /*
      * Lifecycle
@@ -71,7 +74,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             public void onTranslation(float tx, float ty, float ts) {
                 if (selectedDevice != null) {
                     deviceRssi = new Intent(getContext(), Intent.class).getDoubleExtra(selectedDevice.EXTRA_RSSI, 100);
-                    sensorData = STX + deviceRssi + "," + tx + "," + ty + "," + ts + ETX;
+                    sensorData = STX + Integer.toString(curr_socket.getRssi()) + "," + tx + "," + ty + "," + ts + ETX;
                 } else {
                     sensorData = STX + "100" + "," + tx + "," + ty + "," + ts + ETX;
                 }
@@ -207,7 +210,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             status("connecting...");
             connected = Connected.Pending;
             SerialSocket socket = new SerialSocket(getActivity().getApplicationContext(), device);
+            curr_socket = socket;
             service.connect(socket);
+            gatt = socket.getGatt();
             selectedDevice = device;
         } catch (Exception e) {
             onSerialConnectError(e);
@@ -287,6 +292,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
      */
     @Override
     public void onSerialConnect() {
+        // start
+        rssiReader = new PeriodicRssiReader(gatt);
+        rssiReader.startReadingRssi();
         status("connected");
         connected = Connected.True;
     }

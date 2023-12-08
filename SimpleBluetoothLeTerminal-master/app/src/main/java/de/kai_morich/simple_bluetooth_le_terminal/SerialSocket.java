@@ -75,6 +75,7 @@ class SerialSocket extends BluetoothGattCallback {
     private DeviceDelegate delegate;
     private BluetoothDevice device;
     private BluetoothGatt gatt;
+    private int curr_rssi;
     private BluetoothGattCharacteristic readCharacteristic, writeCharacteristic;
 
     private boolean writePending;
@@ -110,7 +111,9 @@ class SerialSocket extends BluetoothGattCallback {
     String getName() {
         return device.getName() != null ? device.getName() : device.getAddress();
     }
-
+    BluetoothGatt getGatt() {
+        return gatt;
+    }
     void disconnect() {
         Log.d(TAG, "disconnect");
         listener = null; // ignore remaining data and errors
@@ -190,7 +193,14 @@ class SerialSocket extends BluetoothGattCallback {
                 break;
         }
     }
-
+    public int getRssi() {return curr_rssi;}
+    @Override
+    public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            // RSSI value is available in 'rssi'
+            curr_rssi = rssi;
+        }
+    }
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         // status directly taken from gat_api.h, e.g. 133=0x85=GATT_ERROR ~= timeout
