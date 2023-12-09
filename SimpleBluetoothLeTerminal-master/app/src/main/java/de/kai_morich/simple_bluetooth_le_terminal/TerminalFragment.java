@@ -59,6 +59,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private String sensorData;
     private SerialSocket curr_socket;
     private Handler handler;
+    private Runnable sendDataRunnable;
 
         /*
      * Lifecycle
@@ -81,6 +82,18 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 }
             }
         });
+        this.handler = new Handler(Looper.getMainLooper());
+        this.sendDataRunnable = new Runnable() {
+            @SuppressWarnings("MissingPermission")
+            @Override
+            public void run() {
+                if (connected == Connected.True) {
+                    send(sensorData);
+                    // Schedule next read after a delay (adjust as needed)
+                    handler.postDelayed(this, 100); // Read RSSI every 1 second
+                }
+            }
+        };
 
     }
 
@@ -296,7 +309,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         // start
         rssiReader = new PeriodicRssiReader(gatt);
         rssiReader.startReadingRssi();
-        periodicSendData();
+        handler.post(sendDataRunnable);
         status("connected");
         connected = Connected.True;
     }
@@ -322,18 +335,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     public void onSerialIoError(Exception e) {
         status("connection lost: " + e.getMessage());
         disconnect();
-    }
-
-    private void periodicSendData() {
-        handler = new Handler(Looper.getMainLooper());
-
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                send(sensorData);
-                handler.postDelayed(this, 1000);
-            }
-        };
     }
 
 }
