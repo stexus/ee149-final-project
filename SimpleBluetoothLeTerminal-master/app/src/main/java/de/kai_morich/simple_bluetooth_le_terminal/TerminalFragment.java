@@ -32,6 +32,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import java.util.ArrayDeque;
+import java.text.DecimalFormat;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
 
@@ -60,7 +61,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private SerialSocket curr_socket;
     private Handler handler;
     private Runnable sendDataRunnable;
-
+    private DecimalFormat df;
         /*
      * Lifecycle
      */
@@ -70,13 +71,14 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         setHasOptionsMenu(true);
         setRetainInstance(true);
         deviceAddress = getArguments().getString("device");
+        df = new DecimalFormat("#.##");
         magnetometer = MainActivity.getMagnetometer();
         magnetometer.setListener(new Magnetometer.Listener() {
             @Override
             public void onTranslation(float tx, float ty, float ts) {
                 if (selectedDevice != null) {
                     // deviceRssi = rssiReader.getRssi();
-                    sensorData = STX + Integer.toString(curr_socket.getRssi()) + "," + tx + "," + ty + "," + ts + ETX;
+                    sensorData = STX + Integer.toString(curr_socket.getRssi()) + "," + df.format(tx) + "," + df.format(ty) + "," + df.format(ts) + ETX;
                 } else {
                     sensorData = STX + "100" + "," + tx + "," + ty + "," + ts + ETX;
                 }
