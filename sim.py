@@ -41,19 +41,30 @@ class Follower:
     def __init__(self, pos0, dt):
         self.pos = np.array(pos0)
         self.vel = np.array([0.0, 0.0])
-        self.last_vel = self.vel
+        self.acc = np.array([0.0, 0.0])
+        self.last_vel = self.vel.copy()
         self.dt = dt
-        self.speed = 1
+        self.leader_rel_vel = np.array([0.0, 0.0])
+        self.leader_rel_pos = np.array([0.0, 0.3])
+        self.ds = []
+        self.desired_dist = 0.5
 
     def follow(self, leader):
-        acc = (self.vel - self.last_vel) / self.dt
+        self.acc = (self.vel - self.last_vel) / self.dt
 
-        rel_acc, dist = leader.sense_raw(acc, self.pos, 0.5, 0.3)
+        leader_rel_acc, dist = leader.sense_raw(self.acc, self.pos, 1.0, 0.0)
+        self.leader_rel_vel += leader_rel_acc*self.dt
+        self.leader_rel_pos += self.leader_rel_vel*self.dt + 0.5*leader_rel_acc*self.dt*self.dt
+        self.ds.append(dist)
 
+        self.Kp = 10
+        self.Kd = 0.1
+        # self.acc = leader_rel_acc # + self.leader_rel_pos*self.Kp + self.leader_rel_vel*self.Kd
+        # self.vel += self.acc*self.dt
+        self.last_vel[:] = self.vel[:]
+        print(dist)
+        self.vel += self.leader_rel_vel
         self.pos += self.vel*self.dt
-        self.last_vel = self.vel
-        self.vel += rel_acc*self.dt
-        # self.vel *= (dist / np.linalg.norm(self.vel))
 
 class Map:
     def __init__(self, dims, x_min, x_max, y_min, y_max):
@@ -130,5 +141,15 @@ if __name__ == "__main__":
             np.sin(2*t)
         ])
     )
+    # sim.set_leader_path(
+    #     lambda t: np.array([
+    #         -np.pi+t,
+    #         -0.1*((t-np.pi)**2)+1
+    #     ])
+    # )
 
-    sim.run_and_show(4*np.pi, fade=0.01)
+    sim.run_and_show(2*np.pi, fade=0.01)
+
+    plt.figure()
+    plt.plot(sim.followers[0].ds)
+    plt.show()

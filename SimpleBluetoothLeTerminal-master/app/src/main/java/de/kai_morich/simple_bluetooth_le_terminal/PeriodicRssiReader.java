@@ -22,7 +22,7 @@ public class PeriodicRssiReader {
                 if (bluetoothGatt != null && isReadingRssi) {
                     bluetoothGatt.readRemoteRssi();
                     // Schedule next read after a delay (adjust as needed)
-                    handler.postDelayed(this, 1000); // Read RSSI every 1 second
+                    handler.postDelayed(this, 100); // Read RSSI every 1 second
                 }
             }
         };
