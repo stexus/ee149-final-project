@@ -208,8 +208,8 @@ uint imu_read_mag(imu_inst_t* imu_inst, axes_data_t* mag_data) {
     for (int i = 0; i < 3; i++) {
         raw[i] = (buf[(i * 2) + 1] << 8 | buf[i * 2]);
     }
-    mag_data->x = (raw[0] * sen_mag);
-    mag_data->y = (raw[1] * sen_mag);
-    mag_data->z = (raw[2] * sen_mag);
+    mag_data->x = (raw[0] * sen_mag * 100);
+    mag_data->y = (raw[1] * sen_mag * 100);
+    mag_data->z = (raw[2] * sen_mag * 100);
     return 0;
 }
