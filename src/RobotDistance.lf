@@ -1,0 +1,24 @@
+// example distance reactor
+target C {
+    platform: {
+      name: "rp2040",
+      board: "pololu_3pi_2040_robot"
+    },
+    single-threaded: true,
+  }
+  
+  import Distance from "lib/Distance.lf"
+  import Display from "lib/Display.lf"
+  
+  main reactor {
+    dist = new Distance()
+    disp = new Display()
+    reaction (startup) -> dist.rssi_reading {=
+        lf_set(dist.rssi_reading->value, -50)
+    =}
+    reaction(dist.distance) -> disp.line0 {=
+        static char buf0[17];
+        snprintf(buf0, 17, "distance:%f", beacon_distance.distance->value);
+        lf_set(disp.line0, buf0);
+    =}
+  }
