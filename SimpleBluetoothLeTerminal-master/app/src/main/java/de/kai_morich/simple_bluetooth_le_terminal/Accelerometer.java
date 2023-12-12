@@ -6,7 +6,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
-public class Magnetometer {
+public class Accelerometer {
 
     // create an interface with one method
     public interface Listener {
@@ -29,12 +29,13 @@ public class Magnetometer {
 
     // create constructor with
     // context as argument
-    Magnetometer(Context context) {
+    Accelerometer(Context context) {
         // create instance of sensor manager
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
 
         // create instance of sensor
-        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        // with type linear acceleration
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         // create the sensor listener
         sensorEventListener = new SensorEventListener() {

@@ -8,6 +8,7 @@ import androidx.appcompat.widget.Toolbar;
 public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
 
     private static Magnetometer magnetometer;
+    private static Accelerometer accelerometer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,6 +22,7 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
         else
             onBackStackChanged();
         magnetometer = new Magnetometer(this);
+        accelerometer = new Accelerometer(this);
     }
 
     @Override
@@ -49,4 +51,5 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
     public static Magnetometer getMagnetometer() {
         return magnetometer;
     }
+    public static Accelerometer getAccelerometer() { return accelerometer; }
 }

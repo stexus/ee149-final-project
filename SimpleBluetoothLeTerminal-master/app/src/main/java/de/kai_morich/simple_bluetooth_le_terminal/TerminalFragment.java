@@ -54,9 +54,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
     private Magnetometer magnetometer;
+    private Accelerometer accelerometer;
     private BluetoothDevice selectedDevice;
     private PeriodicRssiReader rssiReader;
-    private double deviceRssi;
+    private String magnetometerData;
+    private String accelerometerData;
     private String sensorData;
     private SerialSocket curr_socket;
     private Handler handler;
@@ -73,23 +75,27 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         deviceAddress = getArguments().getString("device");
         df = new DecimalFormat("#.##");
         magnetometer = MainActivity.getMagnetometer();
+        accelerometer = MainActivity.getAccelerometer();
         magnetometer.setListener(new Magnetometer.Listener() {
             @Override
             public void onTranslation(float tx, float ty, float ts) {
-                if (selectedDevice != null) {
-                    // deviceRssi = rssiReader.getRssi();
-                    sensorData = STX + Integer.toString(curr_socket.getRssi()) + "," + df.format(tx) + "," + df.format(ty) + "," + df.format(ts) + ETX;
-                } else {
-                    sensorData = STX + "100" + "," + tx + "," + ty + "," + ts + ETX;
-                }
+                magnetometerData = df.format(tx) + "," + df.format(ty) + "," + df.format(ts);
             }
         });
+        accelerometer.setListener(new Accelerometer.Listener() {
+            @Override
+            public void onTranslation(float tx, float ty, float ts) {
+                accelerometerData = df.format(tx) + "," + df.format(ty) + "," + df.format(ts);
+            }
+        });
+
         this.handler = new Handler(Looper.getMainLooper());
         this.sendDataRunnable = new Runnable() {
             @SuppressWarnings("MissingPermission")
             @Override
             public void run() {
                 if (connected == Connected.True) {
+                    sensorData = STX + Integer.toString(curr_socket.getRssi()) + "," + magnetometerData + "," + accelerometerData + ETX;
                     send(sensorData);
                     // Schedule next read after a delay (adjust as needed)
                     handler.postDelayed(this, 100); // Read RSSI every 1 second
