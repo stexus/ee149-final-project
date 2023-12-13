@@ -78,14 +78,14 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         accelerometer = MainActivity.getAccelerometer();
         magnetometer.setListener(new Magnetometer.Listener() {
             @Override
-            public void onTranslation(float tx, float ty, float ts) {
-                magnetometerData = df.format(tx) + "," + df.format(ty) + "," + df.format(ts);
+            public void onTranslation(float tx, float ty) {
+                magnetometerData = df.format(tx) + "," + df.format(ty);
             }
         });
         accelerometer.setListener(new Accelerometer.Listener() {
             @Override
-            public void onTranslation(float tx, float ty, float ts) {
-                accelerometerData = df.format(tx) + "," + df.format(ty) + "," + df.format(ts);
+            public void onTranslation(float tx, float ty) {
+                accelerometerData = df.format(tx) + "," + df.format(ty);
             }
         });
 
@@ -98,7 +98,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     sensorData = STX + Integer.toString(curr_socket.getRssi()) + "," + magnetometerData + "," + accelerometerData + ETX;
                     send(sensorData);
                     // Schedule next read after a delay (adjust as needed)
-                    handler.postDelayed(this, 100); // Read RSSI every 1 second
+                    handler.postDelayed(this, 200); // Read RSSI every 1 second
                 }
             }
         };

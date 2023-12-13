@@ -12,7 +12,7 @@ public class Magnetometer {
     public interface Listener {
         // create method with all 3
         // axis translation as argument
-        void onTranslation(float tx, float ty, float ts);
+        void onTranslation(float tx, float ty);
     }
 
     // create an instance
@@ -46,7 +46,7 @@ public class Magnetometer {
                 // different from null
                 if (listener != null) {
                     // pass the three floats in listener on translation of axis
-                    listener.onTranslation(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]);
+                    listener.onTranslation(sensorEvent.values[0], sensorEvent.values[1]);
                 }
             }
 
