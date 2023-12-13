@@ -63,6 +63,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private Handler handler;
     private Runnable sendDataRunnable;
     private DecimalFormat df;
+    private Orientation orientation;
         /*
      * Lifecycle
      */
@@ -75,6 +76,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         df = new DecimalFormat("#.##");
         magnetometer = MainActivity.getMagnetometer();
         accelerometer = MainActivity.getAccelerometer();
+        orientation = MainActivity.getOrientationSensor();
         magnetometer.setListener(new Magnetometer.Listener() {
             @Override
             public void onTranslation(float tx, float ty) {
@@ -94,7 +96,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             @Override
             public void run() {
                 if (connected == Connected.True) {
-                    sensorData = STX + Integer.toString(curr_socket.getRssi()) + "," + magnetometerData + "," + accelerometerData + ETX;
+                    sensorData = STX + Integer.toString(curr_socket.getRssi()) + "," + orientation.yawToString()+ ETX;
                     send(sensorData);
                     // Schedule next read after a delay (adjust as needed)
                     handler.postDelayed(this, 200); // Read RSSI every 1 second

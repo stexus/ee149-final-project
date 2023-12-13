@@ -10,6 +10,8 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
     private static Magnetometer magnetometer;
     private static Accelerometer accelerometer;
 
+    private static Orientation orientation;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -23,6 +25,7 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
             onBackStackChanged();
         magnetometer = new Magnetometer(this);
         accelerometer = new Accelerometer(this);
+        orientation = new Orientation(this);
     }
 
     @Override
@@ -41,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
         super.onResume();
         magnetometer.register();
         accelerometer.register();
+        orientation.startListening();
     }
 
     @Override
@@ -48,10 +52,13 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
         super.onPause();
         magnetometer.unregister();
         accelerometer.unregister();
+        orientation.stopListening();
     }
 
     public static Magnetometer getMagnetometer() {
         return magnetometer;
     }
     public static Accelerometer getAccelerometer() { return accelerometer; }
+
+    public static Orientation getOrientationSensor() { return orientation; }
 }
