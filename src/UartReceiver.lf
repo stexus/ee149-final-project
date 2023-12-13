@@ -19,14 +19,17 @@ preamble {=
 reactor UartReceiver(baud_rate: uint = 9600) {
   //potentially useful for errors
   output valid: bool;
-  output rssi: int16_t;
-  output magnetometer: double[3];
+  output rssi: double;
+  output magnetometer: double[2];
+  output accelerometer: double[2];
 
   state valid_test: bool = false;
-  state rssi: int16_t; 
+  state rssi: double; 
   state mag_x: double; 
   state mag_y: double; 
-  state mag_z: double; 
+  state accel_x: double; 
+  state accel_y: double; 
+
   state uart_int: int16_t;
   state uart_double: double;
   state timeout: bool;
@@ -127,6 +130,9 @@ reactor UartReceiver(baud_rate: uint = 9600) {
       }
       return false;
   =}
+  method ema (curr_rssi: int16_t, prev_smoothed_rssi: double, alpha: double): double {=
+    return (alpha * (double) curr_rssi) + ((1 - alpha) * prev_smoothed_rssi);
+  =}
   // if start char drops we read entire next packet until start next char
   initial mode CLEAR_FIFO {
     reaction (t) -> reset(IDLE), valid{=
@@ -142,76 +148,46 @@ reactor UartReceiver(baud_rate: uint = 9600) {
   }
 
   mode IDLE {
-    reaction(t) -> reset(READ_MAGNETOMER_Z) {=
-        printf("IDLING\n");
+    reaction(t) -> reset(READ_VALUES) {=
+        //printf("IDLING\n");
         if (uart_is_readable(BLUETOOTH_UART)) {
-          lf_set_mode(READ_MAGNETOMER_Z);
+          lf_set_mode(READ_VALUES);
         }
     =}
   }
-  
-  mode READ_RSSI {
-    reaction(t) -> reset(READ_MAGNETOMER_X), reset(CLEAR_FIFO) {=
-      printf("Waiting for RSSI\n");
-      bool done = read_int();
-      // at the moment this wont work; need to set last read time when we actually read something
-      if (done) {
-        self->last_read_time = lf_time_physical_elapsed();
-        self->rssi = self->uart_int;
-        lf_set_mode(READ_MAGNETOMER_X);
-      }
-      if (self->timeout) lf_set_mode(CLEAR_FIFO);
-    =}
-  }
-  mode READ_MAGNETOMER_X {
-    reaction(t) -> reset(READ_MAGNETOMER_Y), reset(CLEAR_FIFO) {=
-      printf("Waiting for MAG X\n");
-      bool done = read_double();
-      if (done) {
-        self->last_read_time = lf_time_physical_elapsed();
-        self->mag_x = self->uart_double;
-        lf_set_mode(READ_MAGNETOMER_Y);
-      }
-      if (self->timeout) lf_set_mode(CLEAR_FIFO);
-    =}
-
-  }
-  mode READ_MAGNETOMER_Y {
-    reaction(t) -> reset(READ_MAGNETOMER_Z), reset(CLEAR_FIFO) {=
-      printf("Waiting for MAG Y\n");
-      bool done = read_double();
-      if (done) {
-        self->last_read_time = lf_time_physical_elapsed();
-        self->mag_y = self->uart_double;
-        lf_set_mode(READ_MAGNETOMER_Z);
-      }
-      if (self->timeout) lf_set_mode(CLEAR_FIFO);
-    =}
-
-  }
-  mode READ_MAGNETOMER_Z {
-    reaction(t) -> reset(IDLE), reset(CLEAR_FIFO), magnetometer, rssi, valid {=
+  mode READ_VALUES {
+    reaction(t) -> reset(IDLE), reset(CLEAR_FIFO), magnetometer, accelerometer, rssi, valid {=
       if (self->timeout) lf_set_mode(CLEAR_FIFO);
       printf("Waiting for Packet \n");
       //doing it like this actually does not require a timeout
       bool read_int = read_int();
-      if (read_int) self->rssi = self->uart_int;
+      if (read_int) self->rssi = ema(self->uart_int, self->rssi, 0.6);
       bool read_double1 = read_double();
       if (read_double1) self->mag_x = self->uart_double;
       bool read_double2 = read_double();
       if (read_double2) self->mag_y = self->uart_double;
-      bool read_double3 = read_double();
-      if (read_double3) self->mag_z = self->uart_double;
-      bool valid_packet = read_int && read_double1 && read_double2 && read_double3;
+
+      // bool read_double_x1 = read_double();
+      // if (read_double_x1) self->accel_x = self->uart_double;
+      // bool read_double_x2 = read_double();
+      // if (read_double_x2) self->accel_y = self->uart_double;
+
+      // bool valid_packet = read_int && read_double1 && read_double2 && read_double_x1 && read_double_x2;
+      bool valid_packet = read_int && read_double1 && read_double2;
+
       if (!valid_packet) {
         lf_set_mode(CLEAR_FIFO);
       } else {
         magnetometer->value[0] = self->mag_x;
         magnetometer->value[1] = self->mag_y;
-        magnetometer->value[2] = self->mag_z;
+
+        // accelerometer->value[0] = self->accel_x;
+        // accelerometer->value[1] = self->accel_y;
+
         lf_set(valid, true);
         lf_set(rssi, self->rssi);
         lf_set_present(magnetometer);
+        // lf_set_present(accelerometer);
         lf_set_mode(CLEAR_FIFO);
         printf("Done");
       }
