@@ -71,9 +71,9 @@ public class Orientation implements SensorEventListener {
         return Double.toString(Math.toDegrees(orientationValues[0]));
     }
     public double yaw() {
-        return Math.toDegrees(orientationValues[0]);
+        return Math.toDegrees(orientationValues[0]) * 10;
     }
     public double roll() {
-        return Math.toDegrees(orientationValues[2]);
+        return Math.toDegrees(orientationValues[2]) * 10;
     }
 }

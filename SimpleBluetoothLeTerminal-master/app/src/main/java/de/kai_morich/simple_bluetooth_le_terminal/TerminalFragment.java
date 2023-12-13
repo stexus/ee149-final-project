@@ -96,7 +96,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             @Override
             public void run() {
                 if (connected == Connected.True) {
-                    sensorData = STX + Integer.toString(curr_socket.getRssi()) + "," + df.format(orientation.yaw()) + df.format(orientation.roll()) + ETX;
+                    sensorData = STX + Integer.toString(curr_socket.getRssi()) + "," + df.format(orientation.yaw()) + "," + df.format(orientation.roll()) + ETX;
                     send(sensorData);
                     // Schedule next read after a delay (adjust as needed)
                     handler.postDelayed(this, 200); // Read RSSI every 1 second
