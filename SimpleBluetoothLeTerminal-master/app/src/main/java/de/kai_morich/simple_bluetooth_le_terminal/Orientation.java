@@ -41,18 +41,20 @@ public class Orientation implements SensorEventListener {
         } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
             System.arraycopy(event.values, 0, magnetometerValues, 0, 3);
         }
+        if (accelerometerValues != null && magnetometerValues != null) {
+            SensorManager.getRotationMatrix(rotationMatrix, null, accelerometerValues, magnetometerValues);
+            SensorManager.getOrientation(rotationMatrix, orientationValues);
 
-        SensorManager.getRotationMatrix(rotationMatrix, null, accelerometerValues, magnetometerValues);
-        SensorManager.getOrientation(rotationMatrix, orientationValues);
+            // Apply complementary filter for smoother results
+            float[] fusedOrientation = new float[3];
+            fusedOrientation[0] = ALPHA * orientationValues[0] + (1 - ALPHA) * fusedOrientation[0];
+            fusedOrientation[1] = ALPHA * orientationValues[1] + (1 - ALPHA) * fusedOrientation[1];
+            fusedOrientation[2] = ALPHA * orientationValues[2] + (1 - ALPHA) * fusedOrientation[2];
 
-        // Apply complementary filter for smoother results
-        float[] fusedOrientation = new float[3];
-        fusedOrientation[0] = ALPHA * orientationValues[0] + (1 - ALPHA) * fusedOrientation[0];
-        fusedOrientation[1] = ALPHA * orientationValues[1] + (1 - ALPHA) * fusedOrientation[1];
-        fusedOrientation[2] = ALPHA * orientationValues[2] + (1 - ALPHA) * fusedOrientation[2];
+            // Update the orientation values
+            orientationValues = fusedOrientation.clone();
+        }
 
-        // Update the orientation values
-        orientationValues = fusedOrientation.clone();
     }
 
     @Override
