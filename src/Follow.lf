@@ -77,7 +77,7 @@ main reactor {
     reaction(enc.left, enc.right) {=
       // Ignore the first input because we can't estimate speed.
       instant_t now = lf_time_logical();
-      if (self->prev_time > 0) {
+      if (self->prev_time_encs > 0) {
         interval_t interval = now - self->prev_time_encs;
 
         // Ignore intervals that are too small. Assume a maximum sample rate of 1kHz.
@@ -91,20 +91,20 @@ main reactor {
       self->prev_time_encs = now;
     =}
 
-    reaction(mg.heading, acc.x, dist.distance) -> motors.right_speed, motors.left_speed, d.line0, d.line1 {=
+    reaction(mg.heading, acc.x, dist.distance) -> motors.right_speed, motors.left_speed, d.line0, d.line1, d.line2, d.line3 {=
       instant_t now = lf_time_logical();
       const float rho = 0.01f;
       if (self->prev_time > 0) {
         interval_t dt = now - self->prev_time;
-        float vel_predict = self->vel + acc.x->value*dt;
+        float vel_predict = self->vel + acc.x->value*(dt * 1e-9f);
         self->vel = (1 - rho)*vel_predict + rho*(self->encs_vel);
 
         self->heading = mg.heading->value / RAD2DEG;
 
         // Use sensor data to compute motor speeds
 
-        self->px = self->px + self->vel*cos(self->heading)*dt;
-        self->py = self->py + self->vel*sin(self->heading)*dt;
+        self->px = self->px + self->vel*cos(self->heading)*(dt * 1e-9f);
+        self->py = self->py + self->vel*sin(self->heading)*(dt * 1e-9f);
 
         float b = (self->prev_beacon_px - self->px)*cos(self->beacon_heading) + (self->prev_beacon_py - self->py)*sin(self->beacon_heading);
         float delta_px_sq = (self->prev_beacon_px - self->px)*(self->prev_beacon_px - self->px);
@@ -142,12 +142,18 @@ main reactor {
 
         static char buf0[17];
         static char buf1[17];
+        static char buf2[17];
+        static char buf3[17];
 
-        snprintf(buf0, 17, "L:%2.4f", vleft_cmd);
-        snprintf(buf1, 17, "R:%2.4f", vright_cmd);
+        snprintf(buf0, 17, "dt:%2.4f", dt);
+        snprintf(buf1, 17, "velp:%2.4f", vel_predict);
+        snprintf(buf2, 17, "vele:%2.4f", self->encs_vel);
+        snprintf(buf3, 17, "b:%2.4f", b);
         
         lf_set(d.line0, buf0);
         lf_set(d.line1, buf1);
+        lf_set(d.line2, buf2);
+        lf_set(d.line3, buf3);
 
         lf_set(motors.left_speed, vleft_cmd);
         lf_set(motors.right_speed, vright_cmd);
