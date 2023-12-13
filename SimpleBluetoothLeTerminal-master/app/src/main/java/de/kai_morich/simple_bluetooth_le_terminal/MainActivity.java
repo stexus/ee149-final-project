@@ -40,12 +40,14 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
     protected void onResume() {
         super.onResume();
         magnetometer.register();
+        accelerometer.register();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         magnetometer.unregister();
+        accelerometer.unregister();
     }
 
     public static Magnetometer getMagnetometer() {

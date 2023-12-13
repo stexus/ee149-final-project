@@ -55,7 +55,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private String newline = TextUtil.newline_crlf;
     private Magnetometer magnetometer;
     private Accelerometer accelerometer;
-    private BluetoothDevice selectedDevice;
     private PeriodicRssiReader rssiReader;
     private String magnetometerData;
     private String accelerometerData;
@@ -235,7 +234,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             curr_socket = socket;
             service.connect(socket);
             gatt = socket.getGatt();
-            selectedDevice = device;
         } catch (Exception e) {
             onSerialConnectError(e);
         }
